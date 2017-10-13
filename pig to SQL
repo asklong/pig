@@ -10,3 +10,10 @@ Pig
 A = LOAD 'data' USING PigStorage() AS (col1:int, col2:chararray);
 B = FILTER A BY col1 > 20;
 DUMP B;
+
+2 set output partation number:
+--parallel.pig
+daily   = load 'NYSE_daily' as (exchange, symbol, date, open, high, low, close,
+            volume, adj_close);
+bysymbl = group daily by symbol parallel 10;
+parallel只针对一条语句，如果希望脚本中的所有语句都有10个reduce进程，可以使用 set default_parallel 10命令
