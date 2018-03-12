@@ -1,0 +1,38 @@
+set mapreduce.input.fileinputformat.split.maxsize=536870912;
+set mapreduce.input.fileinputformat.split.minsize=536870912;
+set mapreduce.input.fileinputformat.split.minsize.per.node=536870912;
+set mapreduce.input.fileinputformat.split.minsize.per.rack=536870912;
+
+set hive.exec.compress.output=true;
+set mapreduce.output.fileoutputformat.compress=true;
+set hive.exec.dynamic.partition=true;
+set hive.exec.dynamic.partition.mode=nonstrict;
+set hive.enforce.bucketing=true;
+set mapreduce.job.reduces=999;
+
+use ${FDN_HIVE_DB_TABLE};
+
+CREATE EXTERNAL TABLE IF NOT EXISTS ${table_name}(
+    `page_tracking_id` binary COMMENT 'Unique ID associated with an instance of the current page during the event',
+    `parent_page_tracking_id` string COMMENT 'Unique ID associated with an instance of the previous page during the event',
+    `date_sk` string COMMENT 'Date in PST',
+    `gco_source_id` int COMMENT 'gco source id',
+    `created_ts` bigint COMMENT 'create timestamp',
+    `updated_ts` bigint COMMENT 'update timestamp',
+    `created_by` binary COMMENT 'create by who',
+    `updated_by` binary COMMENT 'update  by who'
+  )
+ROW FORMAT SERDE
+  'org.apache.hadoop.hive.serde2.avro.AvroSerDe'
+STORED AS INPUTFORMAT
+  'org.apache.hadoop.hive.ql.io.avro.AvroContainerInputFormat'
+OUTPUTFORMAT
+  'org.apache.hadoop.hive.ql.io.avro.AvroContainerOutputFormat'
+LOCATION
+  '${FDN_COMMON_SNAPSHOT_DIR}/${table_name}/${partition}';
+
+use ${FDN_HIVE_DB_TABLE};
+
+ALTER TABLE ${table_name} SET LOCATION "${name_node}${FDN_COMMON_SNAPSHOT_DIR}/${table_name}/${partition}";
+
+DROP TABLE IF EXISTS ${FDN_HIVE_DB_TABLE}.${stg_table_name};
